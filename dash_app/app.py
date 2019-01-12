@@ -23,7 +23,7 @@ app = config_app(app, debug=True)
 
 # Generate app layoute with 3 div elements: page-header, page-main, page-footer.
 # Content of each div is a function input
-app.layout = app_layout(header=make_header(), main=make_main())
+app.layout = app_layout(main=make_main())
 
 
 @app.callback(Output('page-main', 'children'), [Input('url', 'pathname')])

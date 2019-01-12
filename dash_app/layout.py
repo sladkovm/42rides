@@ -1,6 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from style import colors
+from plots import jumbotron
 
 
 def app_layout(header=None, main=None, footer=None):
@@ -69,9 +70,15 @@ def make_header():
 
 def make_main(content=html.Div()):
     """Returns a div with a plot"""
-    rv = html.Div(        
+    rv = html.Div(className='row no-gutters',     
         children=[
-            content
+            html.Div(children=[
+                html.Div('Requires power data', className='alert alert-danger'),
+                jumbotron(),
+                ],
+                className='col-sm'),
+            html.Div(html.Img(src='/static/stravaio_poster_2018.jpg', width='100%'),
+             className='col-sm')
         ]
     )
     return rv
