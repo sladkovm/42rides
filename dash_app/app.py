@@ -8,10 +8,6 @@ from layout import app_layout, make_header, make_main
 from plots import bar_plot, scatter_plot
 
 import sys
-# import logging
-# logger = logging.getLogger(__name__)
-# logger.addHandler(logging.StreamHandler(stream=sys.stderr))
-# logger.setLevel(logging.DEBUG)
 
 
 server = Flask(__name__)
@@ -27,7 +23,7 @@ app = config_app(app, debug=True)
 
 # Generate app layoute with 3 div elements: page-header, page-main, page-footer.
 # Content of each div is a function input
-app.layout = app_layout(header=make_header())
+app.layout = app_layout(header=make_header(), main=make_main())
 
 
 @app.callback(Output('page-main', 'children'), [Input('url', 'pathname')])
@@ -47,7 +43,7 @@ def routing(pathname):
     elif pathname == '/scatter':
         rv = make_main(scatter_plot)
     else:
-        rv = make_main({'layout': {'title': 'empty plot: click on a Bar or Scatter link'}})
+        rv = make_main(html.Div('Click on Bar or Scatter Link'))
 
     return rv
 

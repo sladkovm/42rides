@@ -67,15 +67,11 @@ def make_header():
     return rv
 
 
-def make_main(plot=html.Div()):
+def make_main(content=html.Div()):
     """Returns a div with a plot"""
-    rv = html.Div(
-        style={'backgroundColor': colors['background']},
+    rv = html.Div(        
         children=[
-            dcc.Graph(
-                id='fig',
-                figure=plot
-            )
+            content
         ]
     )
     return rv
