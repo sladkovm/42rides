@@ -11,6 +11,15 @@ services:
     command: gunicorn -w 1 -b :8000 app:server
 
 
+  api:
+    container_name: api
+    restart: always
+    build: ./strava-oauth
+    ports:
+      - "5042:5042"
+    command: python api.py
+
+
   nginx:
     container_name: nginx
     restart: always
@@ -19,3 +28,4 @@ services:
       - "80:80"
     depends_on:
       - dash_app
+      - api

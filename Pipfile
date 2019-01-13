@@ -12,6 +12,10 @@ dash-html-components = "*"
 dash-renderer = "*"
 numpy = "*"
 gunicorn = ">=19.7.1"
+responder = "*"
 
 [requires]
 python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true

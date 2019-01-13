@@ -18,7 +18,7 @@ def app_layout(header=None, main=None, footer=None):
                 className = 'container-fluid',
                 children=[
                     html.Div(header, id='page-header'),
-                    html.Div(main, id='page-main'),
+                    html.Div(main, id='page-main', className='row no-gutter'),
                     html.Div(footer, id='page-footer')
                 ]
             )
@@ -73,7 +73,7 @@ def make_main(content=html.Div()):
     rv = html.Div(className='row no-gutters',     
         children=[
             html.Div(children=[
-                html.Div('Requires power data', className='alert alert-danger'),
+                html.Div('Requires a powermeter data', className='alert alert-danger'),
                 jumbotron(),
                 ],
                 className='col-sm'),
