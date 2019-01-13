@@ -15,6 +15,10 @@ services:
     container_name: api
     restart: always
     build: ./strava-oauth
+    environment:
+      - APP_URL=http://test.velometria.com
+    env_file: 
+      - .env
     ports:
       - "5042:5042"
     command: python api.py

@@ -2,6 +2,8 @@ import responder
 import requests
 import os
 import urllib
+import json
+
 
 api = responder.API()
 
@@ -12,9 +14,9 @@ def authorize_url():
     params = {
         "client_id": os.getenv('STRAVA_CLIENT_ID'),
         "response_type": "code",
-        "redirect_uri": f"{app_url}/strava-oauth/authorization_successful",
+        "redirect_uri": f"{app_url}/api/authorization_successful",
         "scope": "read,profile:read_all,activity:read",
-        "state": 'https://github.com/sladkovm/strava-oauth',
+        "state": 'mystate',
         "approval_prompt": "force"
     }
     values_url = urllib.parse.urlencode(params)
@@ -49,8 +51,9 @@ def authorization_successful(req, resp):
         "grant_type": "authorization_code"
     }
     r = requests.post("https://www.strava.com/oauth/token", params)
-    resp.text = r.text
-
+    response = json.loads(r.text)
+    app_url = os.getenv('APP_URL', 'http://localhost:5042')
+    api.redirect(resp, location=f"{app_url}/{response['athlete']['id']}")
 
 if __name__ == "__main__":
     api.run(address="0.0.0.0")
