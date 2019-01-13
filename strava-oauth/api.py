@@ -3,6 +3,8 @@ import requests
 import os
 import urllib
 import json
+import stravaio
+import time
 
 
 api = responder.API()
@@ -42,7 +44,7 @@ def authorize(req, resp):
 
 
 @api.route("/authorization_successful")
-def authorization_successful(req, resp):
+async def authorization_successful(req, resp):
     """Exchange code for a user token"""
     params = {
         "client_id": os.getenv('STRAVA_CLIENT_ID'),
@@ -51,7 +53,17 @@ def authorization_successful(req, resp):
         "grant_type": "authorization_code"
     }
     r = requests.post("https://www.strava.com/oauth/token", params)
+    
     response = json.loads(r.text)
+
+    @api.background.task
+    def load_athlete():
+        client = stravaio.StravaIO(response["access_token"])
+        athlete = client.get_logged_in_athlete()
+        athlete.store_locally()
+
+    athlete = load_athlete()
+
     app_url = os.getenv('APP_URL', 'http://localhost:5042')
     api.redirect(resp, location=f"{app_url}/{response['athlete']['id']}")
 

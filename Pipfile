@@ -15,6 +15,7 @@ dash-renderer = "*"
 numpy = "*"
 gunicorn = ">=19.7.1"
 responder = "*"
+stravaio = "*"
 
 [requires]
 python_version = "3.6"
