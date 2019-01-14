@@ -4,7 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from config import config_app
-from layout import app_layout, make_header, make_main
+from layout import app_layout, make_left, make_right
 from plots import bar_plot, scatter_plot
 
 import sys
@@ -23,10 +23,10 @@ app = config_app(app, debug=True)
 
 # Generate app layoute with 3 div elements: page-header, page-main, page-footer.
 # Content of each div is a function input
-app.layout = app_layout(main=make_main())
+app.layout = app_layout()
 
 
-@app.callback(Output('page-main', 'children'), [Input('url', 'pathname')])
+@app.callback(Output('page-left', 'children'), [Input('url', 'pathname')])
 def routing(pathname):
     """Very basic router
 
@@ -38,12 +38,10 @@ def routing(pathname):
     """
     app.server.logger.info(pathname)
 
-    if pathname == '/bar':
-        rv = make_main(bar_plot)
-    elif pathname == '/scatter':
-        rv = make_main(scatter_plot)
+    if pathname == '/':
+        rv = make_left()
     else:
-        rv = make_main(html.Div('Click on Bar or Scatter Link'))
+        rv = html.Div(pathname)
 
     return rv
 
