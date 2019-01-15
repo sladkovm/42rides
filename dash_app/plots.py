@@ -40,7 +40,7 @@ def jumbotron():
                         html.P('Marvel at suffering done above and below FTP', className='lead'),
                         html.P('Relive the 1 sec, 1 min, 5 min and 20 min PRs', className='lead'),
                         html.A('Connect with Strava',
-                            href='http://strava.com',
+                            href='http://test.velometria.com/api/authorize',
                             className='btn btn-danger btn-lg'),
                     ],
                     className = 'jumbotron',
