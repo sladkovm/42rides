@@ -8,6 +8,10 @@ import time
 import bonobo
 import maya
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 api = responder.API()
@@ -46,6 +50,31 @@ def authorize(req, resp):
     api.redirect(resp, location=authorize_url())
 
 
+@api.route("/ready")
+def ready(req, resp):
+    dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
+    f_name = os.path.join(dir_name, f'{1202065}.json')
+    if os.path.exists(f_name):
+        resp.text = "1"
+    else:
+        resp.text = "0"
+
+
+@api.route("/data")
+def plot(req, resp):
+    dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
+    f_name = os.path.join(dir_name, f'{1202065}.json')
+    logger.debug(f_name)
+    try:
+        with open(f_name, 'r') as f:
+            logger.debug(f'Load json from {f_name}')
+            resp.media = json.load(f)
+    except Exception as e:
+        logger.error(e)
+        logger.debug('Data are not redy to load')
+        resp.text = 'None'
+    
+
 @api.route("/authorization_successful")
 async def authorization_successful(req, resp):
     """Exchange code for a user token"""
@@ -64,29 +93,31 @@ async def authorization_successful(req, resp):
         client = stravaio.StravaIO(response["access_token"])
         athlete = client.get_logged_in_athlete()
         athlete.store_locally()
+        logger.debug('fetching athletes')
 
         def extract():
             """Fetch activities summary from Strava"""
-            activities = client.get_logged_in_athlete_activities(after='20180101')
+            activities = client.get_logged_in_athlete_activities(after='20181201')
+            logger.debug('fetching activities')
             for a in activities:
                 yield a
 
         def get_streams(a):
             """Returns dict of activitiy and streams dataframe"""
             if (a.device_watts): # check if the activity has the power data
-        #         pprint(f'{maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
+                logger.debug(f'{maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
                 s = client.get_activity_streams(a.id, athlete.api_response.id)
                 if isinstance(s, pd.DataFrame): # check whether the stream was loaded from the local copy
                     _s = s
                 else: # Streams were loaded from the API, will be stored locally first
                     s.store_locally()
                     _s = pd.DataFrame(s.to_dict())
-                yield {'date': maya.parse(a.start_date).iso8601(),
-                    'watts': list(_s['watts'])}
+                yield {maya.parse(a.start_date).iso8601(): list(_s['watts'])}
 
 
         d = []
         def load(s):
+            logger.debug('Loading')
             d.append(s)
 
         g = bonobo.Graph()
@@ -101,7 +132,11 @@ async def authorization_successful(req, resp):
             return strava_dir
         # activities = client.get_logged_in_athlete_activities(after='20180101')
         with open(os.path.join(dir_testdata(), f'{athlete.api_response.id}.json'), 'w') as f:
+            logger.debug('Save to json')
             json.dump(d, f)
+        # df = pd.DataFrame(d)
+        # f_name = os.path.join(dir_testdata(), f'{athlete.api_response.id}.json')
+        # df.to_parquet(f_name)
 
     load_athlete()
 

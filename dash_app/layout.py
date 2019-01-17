@@ -12,6 +12,7 @@ def app_layout():
         className = 'container-fluid no-gutters',
         children=[
             dcc.Location(id='url', refresh=False),
+            dcc.Interval(id='interval', interval=1000),
             html.Div(id='page-content',
                 className='row no-gutters',
                 children=[
