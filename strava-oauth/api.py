@@ -34,30 +34,10 @@ def authorize_url():
     return rv
 
 
-@api.route("//")
-def home(req, resp):
-    resp.text = "Welcome to strava-oauth"
-
-
-@api.route("/client")
-def client(req, resp):
-    resp.text = os.getenv('STRAVA_CLIENT_ID')
-
-
 @api.route("/authorize")
 def authorize(req, resp):
     """Redirect user to the Strava Authorization page"""
     api.redirect(resp, location=authorize_url())
-
-
-@api.route("/ready")
-def ready(req, resp):
-    dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
-    f_name = os.path.join(dir_name, f'{1202065}.json')
-    if os.path.exists(f_name):
-        resp.text = "1"
-    else:
-        resp.text = "0"
 
 
 @api.route("/data")

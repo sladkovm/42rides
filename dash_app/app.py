@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, Event, State
 from config import config_app
 from layout import app_layout, make_left, make_right
-from plots import bar_plot, scatter_plot
+from plots import process_data, plot_poster
 import time
 import requests
 import json
@@ -52,6 +52,7 @@ def routing(pathname):
 @app.callback(Output('interval', 'interval'),
              [Input('page-right', 'value'), Input('url', 'pathname')])
 def stop_interval(value, pathname):
+    """Stop the interval, when data is loaded into page-right"""
     if value == html.Div("None") or pathname == '/':
         app.server.logger.info(f"{value} 1000")
         return 1000
@@ -65,36 +66,18 @@ def stop_interval(value, pathname):
              [State('page-right', 'children')],
               events=[Event('interval', 'interval')])
 def display_status(pathname, children):
+    """Load the data from API into the page right"""
     r = requests.get('http://api:5042/data')
     if r.text == 'None' or pathname == '/':
-        app.server.logger.info(r.text)
+        # do nothing
         rv = children
     else:
+        # load the data
         d = json.loads(r.text)
         app.server.logger.info(f"Data: {len(d)}")
-        rv = html.Div(r.text)
+        data = process_data(d)
+        rv = html.Div(dcc.Graph(id='fig', figure=plot_poster(data)))
     return rv
-
-
-# @app.callback(Output('page-right', 'children'), [Input('url', 'pathname')])
-# def routing_right(pathname):
-#     """Very basic router
-
-#     This callback function will read the current url
-#     and based on pathname value will populate the children of the page-main
-
-#     Returns:
-#         html.Div
-#     """
-#     app.server.logger.info(pathname)
-
-#     if pathname == '/':
-#         rv = make_right()
-#     else:
-#         r = requests.get('http://api:5042/data')
-#         rv = html.Div(r.text)
-
-#     return rv
 
 
 if __name__ == '__main__':
