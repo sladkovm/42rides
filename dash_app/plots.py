@@ -169,7 +169,7 @@ def plot_poster(to_plot):
 
     fig['layout'].update(title='42 Strava Rides',
                          font=dict(family="Courier New", color="#FFF"),
-                         height=640,
+                         height=800,
                          showlegend=False, paper_bgcolor='#111', plot_bgcolor='#111',
                          yaxis=yaxis_settings,
                          xaxis=xaxis_settings1,

@@ -21,6 +21,8 @@ services:
       - .env
     ports:
       - "5042:5042"
+    volumes:
+      - stravadata:/root/.stravadata
     command: python api.py
 
 
@@ -33,3 +35,6 @@ services:
     depends_on:
       - dash_app
       - api
+
+volumes:
+  stravadata:
