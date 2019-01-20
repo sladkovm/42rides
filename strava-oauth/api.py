@@ -40,8 +40,26 @@ def authorize(req, resp):
     api.redirect(resp, location=authorize_url())
 
 
+@api.route("/athlete")
+def athlete(req, resp):
+    _id = req.params.get('id', None)
+    logger.info(f"Athlete id is {_id}")
+    dir_name = os.path.join(os.path.expanduser('~'), '.stravadata')
+    f_name = os.path.join(dir_name, f"athlete_{_id}.json")
+    try:
+        with open(f_name, 'r') as f:
+            a = json.load(f)
+            rv = {'firstname': a['firstname'],
+                  'lastname': a['lastname'],
+                  'ftp': a.get('ftp', None)}
+    except Exception as e:
+        logger.error(e)
+        rv = None
+    resp.media = rv
+
+
 @api.route("/data")
-def plot(req, resp):
+def data(req, resp):
     dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
     f_name = os.path.join(dir_name, f'{1202065}.json')
     logger.debug(f_name)
@@ -77,7 +95,7 @@ async def authorization_successful(req, resp):
 
         def extract():
             """Fetch activities summary from Strava"""
-            activities = client.get_logged_in_athlete_activities(after='20181201')
+            activities = client.get_logged_in_athlete_activities(after='20181101')
             logger.debug('fetching activities')
             for a in activities:
                 yield a

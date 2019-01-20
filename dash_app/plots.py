@@ -85,9 +85,9 @@ def power_color(new, old):
 
 
 def plot_poster(to_plot):
-    n_plots = len(to_plot)
+    # n_plots = len(to_plot)
     MODE = 'markers'
-#     n_plots = 42
+    n_plots = 2
     specs = [[{}, {}, {}] for i in range(n_plots)]
     fig = tools.make_subplots(rows=n_plots, cols=3,
                               specs=specs,

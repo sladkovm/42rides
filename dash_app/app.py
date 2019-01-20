@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, g
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -44,7 +44,26 @@ def routing(pathname):
     if pathname == '/':
         rv = make_left()
     else:
-        rv = html.Div(pathname)
+        try:
+            id = pathname.strip('/')
+            app.server.logger.info(f"Athlete id is {id}")
+            r = requests.get('http://api:5042/athlete', params={'id': id})
+            app.server.logger.info(r.url)
+            d = json.loads(r.text)
+            g.athlete = d
+            app.server.logger.info(f"{d}")
+            rv = html.Div(children=[
+                html.Div(pathname),
+                html.Div(d['firstname']),
+                html.Div(d['lastname']),
+                html.Div(d['ftp']),
+                html.Div(r.text)
+            ])
+        except Exception as e:
+            app.server.logger.error(e)
+            id = None
+            rv = html.Div(pathname)
+            g.athlete = None
 
     return rv
 
