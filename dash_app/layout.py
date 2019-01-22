@@ -13,6 +13,7 @@ def app_layout():
         children=[
             dcc.Location(id='url', refresh=False),
             dcc.Interval(id='interval', interval=1000),
+            html.Div(id='athlete', style={'display': 'none'}),
             html.Div(id='page-content',
                 className='row no-gutters',
                 children=[

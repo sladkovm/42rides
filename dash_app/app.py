@@ -29,8 +29,26 @@ app = config_app(app, debug=True)
 app.layout = app_layout()
 
 
-@app.callback(Output('page-left', 'children'), [Input('url', 'pathname')])
-def routing(pathname):
+@app.callback(Output('athlete', 'children'), [Input('url', 'pathname')],
+              [State('athlete', 'children')])
+def loging(pathname, athlete):
+    if pathname == '/' or pathname is None:
+        rv = athlete
+    else:
+        try:
+            id = pathname.strip('/')
+            r = requests.get('http://api:5042/athlete', params={'id': id})
+            app.server.logger.info(f"Loging: {r.text}")
+            rv = r.text
+        except Exception as e:
+            app.server.logger.error(e)
+            rv = athlete
+    return rv
+
+
+@app.callback(Output('page-left', 'children'),
+    [Input('url', 'pathname'), Input('athlete', 'children')])
+def render_left(pathname, athlete):
     """Very basic router
 
     This callback function will read the current url
@@ -41,30 +59,10 @@ def routing(pathname):
     """
     app.server.logger.info(pathname)
 
-    if pathname == '/':
+    if pathname == '/' or athlete is None:
         rv = make_left()
     else:
-        try:
-            id = pathname.strip('/')
-            app.server.logger.info(f"Athlete id is {id}")
-            r = requests.get('http://api:5042/athlete', params={'id': id})
-            app.server.logger.info(r.url)
-            d = json.loads(r.text)
-            g.athlete = d
-            app.server.logger.info(f"{d}")
-            rv = html.Div(children=[
-                html.Div(pathname),
-                html.Div(d['firstname']),
-                html.Div(d['lastname']),
-                html.Div(d['ftp']),
-                html.Div(r.text)
-            ])
-        except Exception as e:
-            app.server.logger.error(e)
-            id = None
-            rv = html.Div(pathname)
-            g.athlete = None
-
+        rv = athlete
     return rv
 
 
@@ -81,21 +79,23 @@ def stop_interval(value, pathname):
 
 
 @app.callback(Output('page-right', 'children'),
-             [Input('url', 'pathname')],
+             [Input('url', 'pathname'), Input('athlete', 'children')],
              [State('page-right', 'children')],
               events=[Event('interval', 'interval')])
-def display_status(pathname, children):
+def display_status(pathname, athlete, children):
     """Load the data from API into the page right"""
-    r = requests.get('http://api:5042/data')
-    if r.text == 'None' or pathname == '/':
+    if pathname == '/' or athlete is None:
         # do nothing
         rv = children
     else:
+        app.server.logger.info(f"Display: {athlete}")
+        a = json.loads(athlete)
+        r = requests.get('http://api:5042/data', params={'id': a.get('id', None)})
         # load the data
         d = json.loads(r.text)
-        app.server.logger.info(f"Data: {len(d)}")
         data = process_data(d)
         rv = html.Div(dcc.Graph(id='fig', figure=plot_poster(data)))
+        # rv = r.text
     return rv
 
 

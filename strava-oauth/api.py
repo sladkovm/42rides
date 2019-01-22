@@ -51,7 +51,8 @@ def athlete(req, resp):
             a = json.load(f)
             rv = {'firstname': a['firstname'],
                   'lastname': a['lastname'],
-                  'ftp': a.get('ftp', None)}
+                  'ftp': a.get('ftp', None),
+                  'id': _id}
     except Exception as e:
         logger.error(e)
         rv = None
@@ -60,12 +61,13 @@ def athlete(req, resp):
 
 @api.route("/data")
 def data(req, resp):
+    id = req.params.get('id', None)
     dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
-    f_name = os.path.join(dir_name, f'{1202065}.json')
+    f_name = os.path.join(dir_name, f'{id}.json')
     logger.debug(f_name)
     try:
         with open(f_name, 'r') as f:
-            logger.debug(f'Load json from {f_name}')
+            logger.debug(f'Loading json from {f_name}')
             resp.media = json.load(f)
     except Exception as e:
         logger.error(e)
