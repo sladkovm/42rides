@@ -29,9 +29,10 @@ app = config_app(app, debug=True)
 app.layout = app_layout()
 
 
-@app.callback(Output('athlete', 'children'), [Input('url', 'pathname')],
-              [State('athlete', 'children')])
+@app.callback(Output('athlete', 'value'), [Input('url', 'pathname')],
+              [State('athlete', 'value')])
 def loging(pathname, athlete):
+    """Get athlete info"""
     if pathname == '/' or pathname is None:
         rv = athlete
     else:
@@ -47,15 +48,9 @@ def loging(pathname, athlete):
 
 
 @app.callback(Output('page-left', 'children'),
-    [Input('url', 'pathname'), Input('athlete', 'children')])
+    [Input('url', 'pathname'), Input('athlete', 'value')])
 def render_left(pathname, athlete):
-    """Very basic router
-
-    This callback function will read the current url
-    and based on pathname value will populate the children of the page-main
-
-    Returns:
-        html.Div
+    """Render left page
     """
     app.server.logger.info(pathname)
 
@@ -66,37 +61,84 @@ def render_left(pathname, athlete):
     return rv
 
 
-@app.callback(Output('interval', 'interval'),
-             [Input('page-right', 'value'), Input('url', 'pathname')])
-def stop_interval(value, pathname):
-    """Stop the interval, when data is loaded into page-right"""
-    if value == html.Div("None") or pathname == '/':
-        app.server.logger.info(f"{value} 1000")
-        return 1000
-    else:
-        app.server.logger.info(f"{value} 3600")
-        return 3600 * 1000
-
-
-@app.callback(Output('page-right', 'children'),
-             [Input('url', 'pathname'), Input('athlete', 'children')],
-             [State('page-right', 'children')],
-              events=[Event('interval', 'interval')])
-def display_status(pathname, athlete, children):
+@app.callback(Output('data', 'value'),
+             [Input('url', 'pathname'), Input('athlete', 'value')],
+             [State('data', 'value')],
+              events=[Event('interval-data', 'interval')])
+def fetch_data(pathname, athlete, data):
     """Load the data from API into the page right"""
     if pathname == '/' or athlete is None:
         # do nothing
-        rv = children
+        rv = data
     else:
-        app.server.logger.info(f"Display: {athlete}")
+        app.server.logger.info(f"Fetch data: {athlete}")
         a = json.loads(athlete)
         r = requests.get('http://api:5042/data', params={'id': a.get('id', None)})
-        # load the data
-        d = json.loads(r.text)
-        data = process_data(d)
-        rv = html.Div(dcc.Graph(id='fig', figure=plot_poster(data)))
-        # rv = r.text
+        rv = r.text
     return rv
+
+
+@app.callback(Output('graph', 'value'),
+             [Input('data', 'value')],
+              events=[Event('interval', 'interval')])
+def graph(data):
+    """Generate graph"""
+    if data is None:
+        rv = None
+    else:
+        # load the data
+        d = process_data(json.loads(data))
+        rv = plot_poster(d)
+    return rv
+
+
+
+@app.callback(Output('page-right', 'children'),
+             [Input('url', 'pathname'), Input('graph', 'value')],
+             [State('page-right', 'children')],
+              events=[Event('interval-graph', 'interval')])
+def page_right(pathname, graph, children):
+    """Load the data from API into the page right"""
+    if pathname == '/':
+        # do nothing
+        app.server.logger.info(f"Page right 1: {pathname}")
+        rv = children
+    else:
+        if graph is None:
+            app.server.logger.info(f"Page right 2: {pathname}")
+            rv = html.Div('Loading data')
+        else:
+            # load the data
+            app.server.logger.info(f"Page right 3: {pathname} graph ok")
+            # g = json.loads(graph)
+            rv = html.Div(dcc.Graph(id='fig', figure=graph))
+    return rv
+
+
+@app.callback(Output('interval-data', 'interval'),
+             [Input('data', 'value'), Input('url', 'pathname')])
+def stop_interval_data(data, pathname):
+    """Stop the interval, when data is loaded into page-right"""
+    if (data is None) or (pathname == '/'):
+        app.server.logger.info(f"Data 1000")
+        return 1000
+    else:
+        app.server.logger.info(f"Data 3600 * 1000")
+        return 3600 * 1000
+
+
+@app.callback(Output('interval-graph', 'interval'),
+             [Input('graph', 'value'), Input('url', 'pathname')])
+def stop_interval_graph(graph, pathname):
+    """Stop the interval, when data is loaded into page-right"""
+    if (graph is None) or (pathname == '/'):
+        app.server.logger.info(f"Graph 1000")
+        return 1000
+    else:
+        app.server.logger.info(f"Graph 3600 * 1000")
+        return 3600 * 1000
+
+
 
 
 if __name__ == '__main__':
