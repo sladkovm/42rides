@@ -5,7 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, Event, State
 from config import config_app
 from layout import app_layout, make_left, make_right
-from plots import process_data, plot_poster
+from plots import process_data, plot_poster, hallo
 import time
 import requests
 import json
@@ -50,28 +50,24 @@ def loging(pathname, athlete):
 @app.callback(Output('page-left', 'children'),
     [Input('url', 'pathname'), Input('athlete', 'value')])
 def render_left(pathname, athlete):
-    """Render left page
-    """
-    app.server.logger.info(pathname)
-
+    """Render left page"""
     if pathname == '/' or athlete is None:
         rv = make_left()
     else:
-        rv = athlete
+        rv = hallo(json.loads(athlete))
     return rv
 
 
 @app.callback(Output('data', 'value'),
              [Input('url', 'pathname'), Input('athlete', 'value')],
-             [State('data', 'value')],
               events=[Event('interval-data', 'interval')])
-def fetch_data(pathname, athlete, data):
+def fetch_data(pathname, athlete):
     """Load the data from API into the page right"""
     if pathname == '/' or athlete is None:
         # do nothing
-        rv = data
+        rv = None
     else:
-        app.server.logger.info(f"Fetch data: {athlete}")
+        app.server.logger.info(f"fetch_data: {athlete}")
         a = json.loads(athlete)
         r = requests.get('http://api:5042/data', params={'id': a.get('id', None)})
         rv = r.text
@@ -79,39 +75,29 @@ def fetch_data(pathname, athlete, data):
 
 
 @app.callback(Output('graph', 'value'),
-             [Input('data', 'value')],
-              events=[Event('interval', 'interval')])
-def graph(data):
+     [Input('data', 'value')])
+def fetch_graph(data):
     """Generate graph"""
     if data is None:
+        app.server.logger.info('fetch_graph: no data')
         rv = None
     else:
-        # load the data
+        app.server.logger.info(f'fetch_graph: Data is ready')
         d = process_data(json.loads(data))
         rv = plot_poster(d)
     return rv
 
 
-
 @app.callback(Output('page-right', 'children'),
-             [Input('url', 'pathname'), Input('graph', 'value')],
-             [State('page-right', 'children')],
-              events=[Event('interval-graph', 'interval')])
-def page_right(pathname, graph, children):
+            [Input('graph', 'value')],
+             [State('page-right', 'children')])
+def page_right(graph, children):
     """Load the data from API into the page right"""
-    if pathname == '/':
-        # do nothing
-        app.server.logger.info(f"Page right 1: {pathname}")
+    app.server.logger.info(f"page_right")
+    if graph is None:        
         rv = children
     else:
-        if graph is None:
-            app.server.logger.info(f"Page right 2: {pathname}")
-            rv = html.Div('Loading data')
-        else:
-            # load the data
-            app.server.logger.info(f"Page right 3: {pathname} graph ok")
-            # g = json.loads(graph)
-            rv = html.Div(dcc.Graph(id='fig', figure=graph))
+        rv = html.Div(dcc.Graph(id='fig', figure=graph))
     return rv
 
 
@@ -120,24 +106,11 @@ def page_right(pathname, graph, children):
 def stop_interval_data(data, pathname):
     """Stop the interval, when data is loaded into page-right"""
     if (data is None) or (pathname == '/'):
-        app.server.logger.info(f"Data 1000")
+        app.server.logger.info(f"stop_interval_data 1000")
         return 1000
     else:
-        app.server.logger.info(f"Data 3600 * 1000")
+        app.server.logger.info(f"stop_interval_data 3600 * 1000")
         return 3600 * 1000
-
-
-@app.callback(Output('interval-graph', 'interval'),
-             [Input('graph', 'value'), Input('url', 'pathname')])
-def stop_interval_graph(graph, pathname):
-    """Stop the interval, when data is loaded into page-right"""
-    if (graph is None) or (pathname == '/'):
-        app.server.logger.info(f"Graph 1000")
-        return 1000
-    else:
-        app.server.logger.info(f"Graph 3600 * 1000")
-        return 3600 * 1000
-
 
 
 

@@ -8,6 +8,33 @@ import maya
 from style import colors
 
 
+def hallo(athlete):
+
+    rv = html.Div(
+                    children = [
+                        
+                        html.Br(),
+                        html.Br(),
+                        html.H1(f"Hallo! {athlete['firstname']}", className='display-4'),
+                        html.Br(),
+                        html.P('We will fetch the data from Strava and generate poster in no time...',
+                                 className='lead'),
+                        html.P('... basically after you will get your coffee...',
+                                 className='lead'),
+                        html.P('... really, stay put and give it solid 1-2 min to render the beauty!',
+                                 className='lead'),
+                        html.Br(),
+                        html.P('The poster with your data will appear on the right side of the screen.',
+                                 className='lead'),
+                    ],
+                    className = 'jumbotron',
+                    style={
+                        'background-color':'transparent'
+                    })
+
+    return rv
+
+
 def jumbotron():
 
     rv = html.Div(
@@ -87,7 +114,7 @@ def power_color(new, old):
 def plot_poster(to_plot):
     # n_plots = len(to_plot)
     MODE = 'markers'
-    n_plots = 2
+    n_plots = 5
     specs = [[{}, {}, {}] for i in range(n_plots)]
     fig = tools.make_subplots(rows=n_plots, cols=3,
                               specs=specs,
