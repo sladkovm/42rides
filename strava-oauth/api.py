@@ -72,7 +72,7 @@ def data(req, resp):
     except Exception as e:
         logger.error(e)
         logger.debug('Data are not redy to load')
-        resp.text = 'None'
+        resp.media = {}
     
 
 @api.route("/authorization_successful")
@@ -97,7 +97,7 @@ async def authorization_successful(req, resp):
 
         def extract():
             """Fetch activities summary from Strava"""
-            activities = client.get_logged_in_athlete_activities(after='20181101')
+            activities = client.get_logged_in_athlete_activities(after='20180101')
             logger.debug('fetching activities')
             for a in activities:
                 yield a

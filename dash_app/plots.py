@@ -15,7 +15,7 @@ def hallo(athlete):
                         
                         html.Br(),
                         html.Br(),
-                        html.H1(f"Hallo! {athlete['firstname']}", className='display-4'),
+                        html.H1(f"Hallo, {athlete['firstname']}!", className='display-4'),
                         html.Br(),
                         html.P('We will fetch the data from Strava and generate poster in no time...',
                                  className='lead'),
@@ -114,7 +114,7 @@ def power_color(new, old):
 def plot_poster(to_plot):
     # n_plots = len(to_plot)
     MODE = 'markers'
-    n_plots = 5
+    n_plots = 2
     specs = [[{}, {}, {}] for i in range(n_plots)]
     fig = tools.make_subplots(rows=n_plots, cols=3,
                               specs=specs,
