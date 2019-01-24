@@ -45,7 +45,7 @@ def make_left(content=None):
 def make_right(content=None):
     """Returns a div with a plot"""
 
-    rv = html.Div(html.Img(src='/static/stravaio_poster_2018.jpg', width='100%'),
+    rv = html.Div(html.Img(src='/static/42_rides_velometria.jpg'),
         className='no-gutters')
 
     return rv

@@ -114,7 +114,7 @@ def power_color(new, old):
 def plot_poster(to_plot):
     # n_plots = len(to_plot)
     MODE = 'markers'
-    n_plots = 2
+    n_plots = 42
     specs = [[{}, {}, {}] for i in range(n_plots)]
     fig = tools.make_subplots(rows=n_plots, cols=3,
                               specs=specs,
@@ -140,7 +140,7 @@ def plot_poster(to_plot):
                           domain=[0.8, 1.0])
 
     _=1
-    for d in to_plot:
+    for d in to_plot[-n_plots:]:
         if _ < (n_plots+1):
             # Date and name
             trace = go.Bar({
@@ -196,7 +196,8 @@ def plot_poster(to_plot):
 
     fig['layout'].update(title='42 Strava Rides',
                          font=dict(family="Courier New", color="#FFF"),
-                         height=800,
+                         width=595,
+                         height=842,
                          showlegend=False, paper_bgcolor='#111', plot_bgcolor='#111',
                          yaxis=yaxis_settings,
                          xaxis=xaxis_settings1,
