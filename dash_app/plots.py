@@ -111,10 +111,10 @@ def power_color(new, old):
         return "#FFF"
 
 
-def plot_poster(to_plot):
+def plot_poster(to_plot, athlete):
     # n_plots = len(to_plot)
     MODE = 'markers'
-    n_plots = 42
+    n_plots = 2
     specs = [[{}, {}, {}] for i in range(n_plots)]
     fig = tools.make_subplots(rows=n_plots, cols=3,
                               specs=specs,
@@ -194,14 +194,25 @@ def plot_poster(to_plot):
         else:
             break
 
-    fig['layout'].update(title='42 Strava Rides',
+    fig['layout'].update(title=f"{athlete['firstname']}'s 42 Strava Rides",
                          font=dict(family="Courier New", color="#FFF"),
-                         width=595,
-                         height=842,
+                         width=600,
+                         height=860,
                          showlegend=False, paper_bgcolor='#111', plot_bgcolor='#111',
                          yaxis=yaxis_settings,
                          xaxis=xaxis_settings1,
                          xaxis2=xaxis_settings2,
-                         xaxis3=xaxis_settings3)
+                         xaxis3=xaxis_settings3,
+                         images=[dict(
+                                source= '/static/api_logo_pwrdBy_strava_stack_light.png',
+                                xref= "paper",
+                                yref= "paper",
+                                x= 1,
+                                y= 1.05,
+                                sizex= 0.2,
+                                sizey= 0.2,
+                                xanchor='right',
+                                yanchor='bottom',
+                                layer= "below")])
 
     return fig

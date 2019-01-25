@@ -13,9 +13,9 @@ def app_layout():
         children=[
             dcc.Location(id='url', refresh=False),
             dcc.Interval(id='interval-data', interval=1000, n_intervals=0),
-            html.Div(id='athlete', style={'display': 'none'}),
-            html.Div(id='data', style={'display': 'none'}),
-            html.Div(id='graph', style={'display': 'none'}),
+            dcc.Store(id='athlete', storage_type='session'),
+            dcc.Store(id='data', storage_type='session'),
+            dcc.Store(id='graph', storage_type='session'),
             html.Div(id='none', style={'display': 'none'}),
             html.Div(id='page-content',
                 className='row no-gutters',
