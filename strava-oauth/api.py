@@ -72,7 +72,7 @@ def data(req, resp):
     except Exception as e:
         logger.error(e)
         logger.debug('Data are not redy to load')
-        resp.media = {}
+        resp.media = []
     
 
 @api.route("/authorization_successful")

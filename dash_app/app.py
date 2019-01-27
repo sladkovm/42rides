@@ -55,6 +55,8 @@ def athltete_login(pathname, athlete):
              [State('athlete', 'data')])
 def render_left(pathname, ts, athlete):
     """Render left page based on value of pathname and athlete"""
+    if ts is None:
+        raise PreventUpdate
     app.server.logger.info(f"render_left: {pathname} {athlete}")
     if (pathname == '/') or (athlete is None):
         rv = make_left()
@@ -63,68 +65,91 @@ def render_left(pathname, ts, athlete):
     return rv
 
 
-@app.callback(Output('interval-data', 'interval'),
-             [Input('data', 'modified_timestamp')],
-             [State('data', 'data')],
-             events=[Event('interval-data', 'interval')])
-def stop_interval_data(ts, data):
-    """Stop the interval, when data is loaded into page-right"""
-    if data: # Stop the interval, when data is fetched
-        app.server.logger.info(f"stop_interval_data {ts} 3600 * 1000")
-        return 3600 * 1000
-    else:
-        app.server.logger.info(f"stop_interval_data {ts} 1000")
-        return 1000
+# @app.callback(Output('interval', 'interval'),
+#              [Input('athlete', 'modified_timestamp'),
+#               Input('graph', 'value'),
+#               Input('interval', 'n_intervals')],
+#              [State('athlete', 'data')])
+# def stop_interval_data(tsa, graph, n_intervals, athlete):
+#     """Stop the interval, when data is loaded into page-right"""
+#     app.server.logger.info(f"stop_interval_data: tsa:{tsa}")
+#     if (tsa is None):
+#         raise PreventUpdate
+#     if (athlete is not None) and (graph is None):
+#         app.server.logger.info(f"stop_interval_data: tsa:{tsa} Start interval")
+#         return 1000
+#     elif graph is not None:
+#         app.server.logger.info(f"stop_interval_data: tsa:{tsa} Stop interval")
+#         return 3600 * 1000
+#     else:
+#         raise PreventUpdate
+    # if (tsa is None):
+    #     # do not run interval, when all is None
+    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} do not update 3600 * 1000")
+    #     raise PreventUpdate
+    # elif (tsa is not None) and (athlete is not None) and (graph is None): 
+    #     # it athlete is known and the data is None, start the interval
+    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} athlete: {athlete}, start: 1000")
+    #     return 2000
+    # else:
+    #     # other cases
+    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} athlete: {athlete} stop: 3600*100")
+    #     return 3600*5000
 
-
-@app.callback(Output('data', 'data'),
-             [Input('athlete', 'modified_timestamp')],
-             [State('athlete', 'data')],
-              events=[Event('interval-data', 'interval')])
-def fetch_data(ts, athlete):
-    """Load the data from API into the page right"""
-    
-    if athlete is not None:
-        a = json.loads(athlete)
-        _id = a.get('id', None)
+@app.callback(Output('request', 'data'),
+            [Input('graph', 'value'),
+             Input('athlete', 'modified_timestamp')],
+            [State('request', 'data')])
+def increment_request(graph, tsa, r):
+    if (tsa is None) or (graph is not None):
+        app.server.logger.info(f"increment_request: tsa: {tsa} Do not update")
+        raise PreventUpdate
+    if r is None:
+        app.server.logger.info(f"increment_request: tsa: {tsa} 0")
+        return 0
     else:
-        _id = None
-
-    r = requests.get('http://api:5042/data', params={'id': _id})
-    if r.text == "{}":
-        app.server.logger.info(f"fetch_data: id: {_id} data: {r.text}")
-        rv = None
-    else:
-        app.server.logger.info(f"fetch_data: id: {_id} data: {r.text[:240]}")
-        rv = r.text
-    return rv
+        app.server.logger.info(f"increment_request: tsa: {tsa} {r+1}")
+        return r+1
 
 
 @app.callback(Output('graph', 'value'),
-     [Input('data', 'modified_timestamp')],
-     [State('athlete', 'data'), State('data', 'data')])
-def fetch_graph(ts, athlete, data):
+            [Input('request', 'modified_timestamp')],
+            [State('athlete', 'data')])
+def fetch_graph(tsr, athlete):
     """Generate graph"""
     if athlete:
         a = json.loads(athlete)
+        _id = a.get('id', None)
     else:
-        a = None
-    
-    if data:
-        _d = json.loads(data)
-        app.server.logger.info(f'fetch_graph: Data {len(_d)}')
+        raise PreventUpdate
+
+    r = requests.get('http://api:5042/data', params={'id': _id})
+    _d = json.loads(r.text)
+    app.server.logger.info(f"fetch_graph {len(_d)}")
+    if len(_d) == 0:
+        return None
+    else: 
         d = process_data(_d)
         rv = plot_poster(d, a)
-    else:
-        app.server.logger.info(f'fetch_graph: No data')
-        rv = None
-    return rv
+        return rv
+    
+
+    # _d = json.loads(r.text)
+    # if len(_d) == 0:
+    #     return None
+    # else:
+    #     d = process_data(_d)
+    #     # rv = plot_poster(d, a)
+    #     rv = "{abc}"
+    #     app.server.logger.info(f"fetch_graph interval: {n_intervals}, Updata graph")
+    # app.server.logger.info(f"fetch_graph interval: {n_intervals}, len(d): {len(_d)}")
+    # return rv
 
 
 @app.callback(Output('page-right', 'children'),
-            [Input('graph', 'modified_timestam')],
-             [State('page-right', 'children'), State('graph', 'data')])
-def page_right(ts, children, graph):
+             [Input('graph', 'value')],
+             [State('page-right', 'children')])
+def page_right(graph, children):
     """Load the data from API into the page right"""
     if graph:
         app.server.logger.info(f"page_right {type(graph)}")
