@@ -10,6 +10,7 @@ from plots import process_data, plot_poster, hallo
 import time
 import requests
 import json
+import uuid
 
 import sys
 
@@ -101,6 +102,7 @@ def render_left(pathname, ts, athlete):
              Input('athlete', 'modified_timestamp')],
             [State('request', 'data')])
 def increment_request(graph, tsa, r):
+    """Increment request every tome the value of graph or athlete changes"""
     if (tsa is None) or (graph is not None):
         app.server.logger.info(f"increment_request: tsa: {tsa} Do not update")
         raise PreventUpdate
@@ -127,7 +129,7 @@ def fetch_graph(tsr, athlete):
     _d = json.loads(r.text)
     app.server.logger.info(f"fetch_graph {len(_d)}")
     if len(_d) == 0:
-        return None
+        return str(uuid.uuid4())
     else: 
         d = process_data(_d)
         rv = plot_poster(d, a)
