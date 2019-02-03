@@ -2,7 +2,7 @@ from flask import Flask, g
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, Event, State
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from config import config_app
 from layout import app_layout, make_left, make_right
@@ -66,49 +66,21 @@ def render_left(pathname, ts, athlete):
     return rv
 
 
-# @app.callback(Output('interval', 'interval'),
-#              [Input('athlete', 'modified_timestamp'),
-#               Input('graph', 'value'),
-#               Input('interval', 'n_intervals')],
-#              [State('athlete', 'data')])
-# def stop_interval_data(tsa, graph, n_intervals, athlete):
-#     """Stop the interval, when data is loaded into page-right"""
-#     app.server.logger.info(f"stop_interval_data: tsa:{tsa}")
-#     if (tsa is None):
-#         raise PreventUpdate
-#     if (athlete is not None) and (graph is None):
-#         app.server.logger.info(f"stop_interval_data: tsa:{tsa} Start interval")
-#         return 1000
-#     elif graph is not None:
-#         app.server.logger.info(f"stop_interval_data: tsa:{tsa} Stop interval")
-#         return 3600 * 1000
-#     else:
-#         raise PreventUpdate
-    # if (tsa is None):
-    #     # do not run interval, when all is None
-    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} do not update 3600 * 1000")
-    #     raise PreventUpdate
-    # elif (tsa is not None) and (athlete is not None) and (graph is None): 
-    #     # it athlete is known and the data is None, start the interval
-    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} athlete: {athlete}, start: 1000")
-    #     return 2000
-    # else:
-    #     # other cases
-    #     app.server.logger.info(f"stop_interval_data tsa:{tsa} athlete: {athlete} stop: 3600*100")
-    #     return 3600*5000
-
 @app.callback(Output('request', 'data'),
             [Input('graph', 'value'),
              Input('athlete', 'modified_timestamp')],
             [State('request', 'data')])
 def increment_request(graph, tsa, r):
     """Increment request every tome the value of graph or athlete changes"""
-    if (tsa is None) or (graph is not None):
+    if (tsa is None):
         app.server.logger.info(f"increment_request: tsa: {tsa} Do not update")
         raise PreventUpdate
     if r is None:
         app.server.logger.info(f"increment_request: tsa: {tsa} 0")
         return 0
+    if (graph is not None) and (len(graph)!=36):
+        app.server.logger.info(f"increment_request: tsa: {tsa} Do not update")
+        raise PreventUpdate
     else:
         app.server.logger.info(f"increment_request: tsa: {tsa} {r+1}")
         return r+1
@@ -116,8 +88,8 @@ def increment_request(graph, tsa, r):
 
 @app.callback(Output('graph', 'value'),
             [Input('request', 'modified_timestamp')],
-            [State('athlete', 'data')])
-def fetch_graph(tsr, athlete):
+            [State('athlete', 'data'), State('request', 'data')])
+def fetch_graph(tsr, athlete, r_id):
     """Generate graph"""
     if athlete:
         a = json.loads(athlete)
@@ -127,25 +99,13 @@ def fetch_graph(tsr, athlete):
 
     r = requests.get('http://api:5042/data', params={'id': _id})
     _d = json.loads(r.text)
-    app.server.logger.info(f"fetch_graph {len(_d)}")
+    app.server.logger.info(f"fetch_graph r: {r_id} len:{len(_d)}")
     if len(_d) == 0:
         return str(uuid.uuid4())
     else: 
         d = process_data(_d)
         rv = plot_poster(d, a)
         return rv
-    
-
-    # _d = json.loads(r.text)
-    # if len(_d) == 0:
-    #     return None
-    # else:
-    #     d = process_data(_d)
-    #     # rv = plot_poster(d, a)
-    #     rv = "{abc}"
-    #     app.server.logger.info(f"fetch_graph interval: {n_intervals}, Updata graph")
-    # app.server.logger.info(f"fetch_graph interval: {n_intervals}, len(d): {len(_d)}")
-    # return rv
 
 
 @app.callback(Output('page-right', 'children'),
@@ -153,7 +113,7 @@ def fetch_graph(tsr, athlete):
              [State('page-right', 'children')])
 def page_right(graph, children):
     """Load the data from API into the page right"""
-    if graph:
+    if graph and (len(graph)!=36):
         app.server.logger.info(f"page_right {type(graph)}")
         rv = html.Div(dcc.Graph(id='fig', figure=graph))
     else:
