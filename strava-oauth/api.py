@@ -85,63 +85,65 @@ async def authorization_successful(req, resp):
         "grant_type": "authorization_code"
     }
     r = requests.post("https://www.strava.com/oauth/token", params)
-    
     response = json.loads(r.text)
-
-    @api.background.task
-    def load_athlete():
-        client = stravaio.StravaIO(response["access_token"])
-        athlete = client.get_logged_in_athlete()
-        athlete.store_locally()
-        logger.debug('fetching athletes')
-
-        def extract():
-            """Fetch activities summary from Strava"""
-            activities = client.get_logged_in_athlete_activities(after='20180101')
-            logger.debug('fetching activities')
-            for a in activities:
-                yield a
-
-        def get_streams(a):
-            """Returns dict of activitiy and streams dataframe"""
-            if (a.device_watts): # check if the activity has the power data
-                logger.debug(f'{maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
-                s = client.get_activity_streams(a.id, athlete.api_response.id)
-                if isinstance(s, pd.DataFrame): # check whether the stream was loaded from the local copy
-                    _s = s
-                else: # Streams were loaded from the API, will be stored locally first
-                    s.store_locally()
-                    _s = pd.DataFrame(s.to_dict())
-                yield {maya.parse(a.start_date).iso8601(): list(_s['watts'])}
-
-
-        d = []
-        def load(s):
-            logger.debug('Loading')
-            d.append(s)
-
-        g = bonobo.Graph()
-        g.add_chain(extract, get_streams, load)
-        bonobo.run(g)
-
-        def dir_testdata():
-            home_dir = os.path.expanduser('~')
-            strava_dir = os.path.join(home_dir, '.testdata')
-            if not os.path.exists(strava_dir):
-                os.mkdir(strava_dir)
-            return strava_dir
-        # activities = client.get_logged_in_athlete_activities(after='20180101')
-        with open(os.path.join(dir_testdata(), f'{athlete.api_response.id}.json'), 'w') as f:
-            logger.debug('Save to json')
-            json.dump(d, f)
-        # df = pd.DataFrame(d)
-        # f_name = os.path.join(dir_testdata(), f'{athlete.api_response.id}.json')
-        # df.to_parquet(f_name)
-
-    load_athlete()
-
+    load_athlete(response)
+    load_activities(response)
     app_url = os.getenv('APP_URL', 'http://localhost:5042')
     api.redirect(resp, location=f"{app_url}/{response['athlete']['id']}")
+
+
+# @api.background.task
+def load_athlete(response):
+    client = stravaio.StravaIO(response["access_token"])
+    athlete = client.get_logged_in_athlete()
+    athlete.store_locally()
+    logger.debug('fetching athletes')
+
+
+@api.background.task
+def load_activities(response):
+    client = stravaio.StravaIO(response["access_token"])
+    def extract():
+        """Fetch activities summary from Strava"""
+        activities = client.get_logged_in_athlete_activities(after='20180101')
+        logger.debug('fetching activities')
+        for a in activities:
+            yield a
+
+    def get_streams(a):
+        """Returns dict of activitiy and streams dataframe"""
+        if (a.device_watts): # check if the activity has the power data
+            logger.debug(f'{maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
+            s = client.get_activity_streams(a.id, response['athlete']['id'])
+            if isinstance(s, pd.DataFrame): # check whether the stream was loaded from the local copy
+                _s = s
+            else: # Streams were loaded from the API, will be stored locally first
+                s.store_locally()
+                _s = pd.DataFrame(s.to_dict())
+            yield {maya.parse(a.start_date).iso8601(): list(_s['watts'])}
+
+    d = []
+    def load(s):
+        logger.debug('Loading')
+        d.append(s)
+
+    g = bonobo.Graph()
+    g.add_chain(extract, get_streams, load)
+    bonobo.run(g)
+
+    f_name = f"{response['athlete']['id']}.json"
+    with open(os.path.join(dir_testdata(), f_name), 'w') as f:
+        logger.debug(f'Save to json {f_name}')
+        json.dump(d, f)
+
+
+def dir_testdata():
+    home_dir = os.path.expanduser('~')
+    strava_dir = os.path.join(home_dir, '.testdata')
+    if not os.path.exists(strava_dir):
+        os.mkdir(strava_dir)
+    return strava_dir
+
 
 
 if __name__ == "__main__":
