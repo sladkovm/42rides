@@ -31,6 +31,7 @@ def authorize_url():
     values_url = urllib.parse.urlencode(params)
     base_url = 'https://www.strava.com/oauth/authorize'
     rv = base_url + '?' + values_url
+    logger.info(f"Authorize url = {rv}")
     return rv
 
 

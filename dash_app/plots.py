@@ -11,26 +11,24 @@ from style import colors
 def hallo(athlete):
 
     rv = html.Div(
-                    children = [
-                        
-                        html.Br(),
-                        html.Br(),
-                        html.H1(f"Hallo, {athlete['firstname']}!", className='display-4'),
-                        html.Br(),
-                        html.P('We will fetch the data from Strava and generate poster in no time...',
-                                 className='lead'),
-                        html.P('... basically after you will get your coffee...',
-                                 className='lead'),
-                        html.P('... really, stay put and give it solid 1-2 min to render the beauty!',
-                                 className='lead'),
-                        html.Br(),
-                        html.P('The poster with your data will appear on the right side of the screen.',
-                                 className='lead'),
-                    ],
-                    className = 'jumbotron',
-                    style={
-                        'background-color':'transparent'
-                    })
+        children = [
+            
+            html.Br(),
+            html.Br(),
+            html.H1(f"Hallo, {athlete['firstname']}!", className='display-4'),
+            html.Br(),
+            html.P('We will fetch the data from Strava and generate a beautiful poster in no time...',
+                        className='lead'),
+            html.P('... really, give it a few minutes to render the beauty!',
+                        className='lead'),
+            html.Br(),
+            html.P('The poster with your data will appear on the right side of the screen.',
+                        className='lead'),
+        ],
+        className = 'jumbotron',
+        style={
+            'background-color':'transparent'
+        })
 
     return rv
 
@@ -42,11 +40,12 @@ def jumbotron():
                         
                         html.Br(),
                         html.Br(),
+                        html.Br(),
                         html.H1('42 Strava Rides', className='display-4'),
                         html.Br(),
                         html.P('Generate a poster with recent 42 Strava Rides', className='lead'),
-                        html.P('Marvel at suffering done above and below FTP', className='lead'),
-                        html.P('Relive the 1 sec, 1 min, 5 min and 20 min PRs', className='lead'),
+                        html.P('Marvel at going deep in orange', className='lead'),
+                        html.P('Relive the glory of the best personal efforts', className='lead'),
                         html.A('Connect with Strava',
                             href='http://test.velometria.com/api/authorize',
                             className='btn btn-danger btn-lg'),

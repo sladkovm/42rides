@@ -34,7 +34,7 @@ def make_left(content=None):
 
     if content is None:
         rv = html.Div(children=[
-                html.Div('Requires a powermeter data', className='alert alert-danger'),
+                # html.Div('Requires a powermeter data', className='alert alert-warning'),
                 jumbotron()],
                 className='no-gutters')
     else:
