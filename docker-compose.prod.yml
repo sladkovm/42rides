@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+
+  dash_app:
+    environment:
+      - APP_URL=http://42rides.velometria.com
+
+  api:
+    environment:
+      - APP_URL=http://42rides.velometria.com
+
+  nginx:

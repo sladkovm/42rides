@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import maya
 from style import colors
+import os
 
 
 def hallo(athlete):
@@ -35,6 +36,8 @@ def hallo(athlete):
 
 def jumbotron():
 
+    app_url = os.getenv('APP_URL', 'http://localhost:5042')
+
     rv = html.Div(
                     children = [
                         
@@ -47,7 +50,7 @@ def jumbotron():
                         html.P('Marvel at going deep in orange', className='lead'),
                         html.P('Relive the glory of the best personal efforts', className='lead'),
                         html.A('Connect with Strava',
-                            href='http://test.velometria.com/api/authorize',
+                            href=f"{app_url}/api/authorize",
                             className='btn btn-danger btn-lg'),
                     ],
                     className = 'jumbotron',
