@@ -83,7 +83,7 @@ def increment_request(graph, tsa, r):
         raise PreventUpdate
     else:
         app.server.logger.info(f"increment_request: tsa: {tsa} {r+1}")
-        time.sleep(500)
+        time.sleep(1)
         return r+1
 
 
@@ -99,7 +99,7 @@ def fetch_graph(tsr, athlete, r_id):
         raise PreventUpdate
     r = requests.get('http://api:5042/data', params={'id': _id})
     _d = json.loads(r.text)
-    app.server.logger.info(f"fetch_graph r: {r_id} len:{len(_d)}")
+    app.server.logger.info(f"fetch_graph: {r_id} len:{len(_d)}")
     if len(_d) == 0:
         return str(uuid.uuid4())
     else: 

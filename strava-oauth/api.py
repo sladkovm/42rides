@@ -55,7 +55,7 @@ def athlete(req, resp):
                   'ftp': a.get('ftp', None),
                   'id': _id}
     except Exception as e:
-        logger.error(e)
+        logger.warning(e)
         rv = None
     resp.media = rv
 
@@ -65,13 +65,13 @@ def data(req, resp):
     id = req.params.get('id', None)
     dir_name = os.path.join(os.path.expanduser('~'), '.testdata')
     f_name = os.path.join(dir_name, f'{id}.json')
-    logger.debug(f_name)
+    logger.debug(f"Trying to read data from {f_name}")
     try:
         with open(f_name, 'r') as f:
             logger.debug(f'Loading json from {f_name}')
             resp.media = json.load(f)
     except Exception as e:
-        logger.error(e)
+        logger.warning(e)
         logger.debug('Data are not redy to load')
         resp.media = []
     
@@ -87,6 +87,7 @@ async def authorization_successful(req, resp):
     }
     r = requests.post("https://www.strava.com/oauth/token", params)
     response = json.loads(r.text)
+    logger.info(f"authorization succesful {response}")
     load_athlete(response)
     load_activities(response)
     app_url = os.getenv('APP_URL', 'http://localhost:5042')
@@ -98,7 +99,7 @@ def load_athlete(response):
     client = stravaio.StravaIO(response["access_token"])
     athlete = client.get_logged_in_athlete()
     athlete.store_locally()
-    logger.debug('fetching athletes')
+    logger.debug('load athlete')
 
 
 @api.background.task
@@ -106,26 +107,34 @@ def load_activities(response):
     client = stravaio.StravaIO(response["access_token"])
     def extract():
         """Fetch activities summary from Strava"""
-        activities = client.get_logged_in_athlete_activities(after='20180101')
-        logger.debug('fetching activities')
+        activities = None
+        while activities is None:
+            time.sleep(1)
+            try:
+                activities = client.get_logged_in_athlete_activities(after='20180101')
+            except:
+                activities = None
+        logger.debug('load_activities: extract: fetching activities')
         for a in activities:
             yield a
 
     def get_streams(a):
         """Returns dict of activitiy and streams dataframe"""
         if (a.device_watts): # check if the activity has the power data
-            logger.debug(f'{maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
+            logger.debug(f'load_activities: Fetching stream for {maya.parse(a.start_date).iso8601()}:, {a.name}, {a.start_latlng}, {a.trainer}, {a.type}')
             s = client.get_activity_streams(a.id, response['athlete']['id'])
             if isinstance(s, pd.DataFrame): # check whether the stream was loaded from the local copy
+                logger.debug(f'load_activities     ...found locally')
                 _s = s
             else: # Streams were loaded from the API, will be stored locally first
+                logger.debug(f'load_activities     ...fetched remotely, storing locally')
                 s.store_locally()
                 _s = pd.DataFrame(s.to_dict())
             yield {maya.parse(a.start_date).iso8601(): list(_s['watts'])}
 
     d = []
     def load(s):
-        logger.debug('Loading')
+        logger.debug('load_activities: Appending date and power data to the dict')
         d.append(s)
 
     g = bonobo.Graph()
@@ -134,7 +143,7 @@ def load_activities(response):
 
     f_name = f"{response['athlete']['id']}.json"
     with open(os.path.join(dir_testdata(), f_name), 'w') as f:
-        logger.debug(f'Save to json {f_name}')
+        logger.debug(f'load_activities: Save data to json {f_name}')
         json.dump(d, f)
 
 
