@@ -103,7 +103,7 @@ def fetch_graph(tsr, athlete, r_id):
     if len(_d) == 0:
         return str(uuid.uuid4())
     else: 
-        d = process_data(_d)
+        d = process_data(_d, a)
         rv = plot_poster(d, a)
         return rv
 

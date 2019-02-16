@@ -61,9 +61,10 @@ def jumbotron():
     return rv
 
 
-def process_data(raw_watts):
+def process_data(raw_watts, athlete):
     to_plot = []
     power_old = [0,0,0,0]
+    ftp = athlete.get('ftp', '250')
     for d in raw_watts:
         d_plot = {}
         watts = pd.Series(list(d.values())[0])
@@ -82,8 +83,8 @@ def process_data(raw_watts):
         
         _streams['time'] = pd.Series(np.arange(len(watts)))
         _streams['color'] = pd.Series(np.arange(len(watts)))
-        _streams['color'].loc[watts>=250] = "#fc4c02"
-        _streams['color'].loc[watts<250] = "#FFF"
+        _streams['color'].loc[watts>=ftp] = "#fc4c02"
+        _streams['color'].loc[watts<ftp] = "#FFF"
         d_plot.update({'streams': _streams})
         
         d_plot.update({'date': maya.parse(list(d.keys())[0]).slang_date()})
@@ -196,7 +197,7 @@ def plot_poster(to_plot, athlete):
         else:
             break
 
-    fig['layout'].update(title=f"{athlete['firstname']}'s 42 Strava Rides",
+    fig['layout'].update(title=f"{athlete['firstname']}'s 42 Rides",
                          font=dict(family="Courier New", color="#FFF"),
                          width=600,
                          height=860,
