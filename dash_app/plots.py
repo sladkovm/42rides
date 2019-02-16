@@ -62,6 +62,9 @@ def jumbotron():
 
 
 def process_data(raw_watts, athlete):
+    """Takes a dict of {date: power} together with athlete
+        and calculates the ready to plot data
+    """
     to_plot = []
     power_old = [0,0,0,0]
     ftp = athlete.get('ftp', '250')
